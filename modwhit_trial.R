@@ -59,13 +59,61 @@ mod <- lm(species~log_area, data = plot_summ%>%
              subset(Transect == "B14" & Year == "2024" & log_sp != "-Inf"))
 summary(mod)$coefficients[1]
 
-#alpha diversity (intercept)
 
 metrics <- plot_summ%>%
   subset(Year == 2024 )%>%
   ddply(.(Transect, SoilVeg, Treatment), function(x)data.frame(
-    intercept = summary(lm(log_sp~log_area, data = subset(x, log_sp != "-Inf")))$coefficients[1]#,
+    intercept = summary(lm(log_sp~log_area, data = subset(x, log_sp != "-Inf")))$coefficients[1],
     slope = summary(lm(log_sp~log_area, data = subset(x, log_sp != "-Inf")))$coefficients[2]
-  ))
+  )) #add gamma diversity metric (saturation of curve)
+
+#alpha diversity (intercept)
+
+mod <- lme(intercept~Treatment, random = ~1|SoilVeg, data = metrics)
+summary(mod)
+
+mod <- lm(intercept~Treatment*SoilVeg, data = metrics)
+summary(mod)
+visreg(mod)
+
+
+#beta diversity (slope)
+mod <- lme(slope~Treatment, random = ~1|SoilVeg, data = metrics)
+summary(mod)
+
+mod <- lm(slope~Treatment*SoilVeg, data = metrics)
+summary(mod)
+visreg(mod)
+
+
+#gamma diversity (saturation point)
+
+
+thousand_m <- rbind( thousand_m)%>%
+  left_join(transect.info, by = "Transect")
+
+mod <- lme(species~Treatment, random = ~1|SoilVeg, data = thousand_m)
+summary(mod)
+
+mod <- lm(species~Treatment*SoilVeg, data = thousand_m)
+summary(mod)
+visreg(mod)
+
+##probably delete below
+x <- plot_summ%>%
+  subset(Year == "2024")%>%
+  subset(Transect == "B14" & Year == "2024" & log_sp != "-Inf")
+
+mod <- lm(species~log(Quad_sz_m2), data = x)
+summary(mod)
+newdata <- data.frame("Quad_sz_m2" = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000))#, 10000, 100000, 1000000, 10000000, 100000000,150000000,155000000, 1000000000,10000000000,100000000000,1000000000000,10000000000000))
+y <- data.frame(predict(mod, newdata = newdata, interval = "prediction"))
+plot(newdata$Quad_sz_m2, y$fit)
+
+#%>%
+  ggplot(aes(Quad_sz_m2, species, color = Treatment))+
+  facet_wrap(~Transect)+
+  geom_point()+
+  geom_smooth(method = "glm", formula = y~log(x)
 
 
