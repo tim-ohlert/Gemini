@@ -30,6 +30,8 @@ plot_summ <- rbind(all_but_thousand_m, thousand_m)%>%
 plot_summ$log_sp <- log(plot_summ$species)
 plot_summ$log_area <- log(plot_summ$Quad_sz_m2)
 
+plot_summ <- dplyr::mutate(plot_summ, Treatment = fct_recode(Treatment, "Impact" = "Drive and Crush", "Control" = "Reference"), SoilVeg = fct_recode(SoilVeg, "Silty Saltbush" = "SiltyAtriplex", "Shallow Creosote" = "ShallowCreosote", "Deep Creosote" = "DeepCreosote"))
+
 
 
 plot_summ%>%
@@ -76,6 +78,13 @@ mod <- lm(intercept~Treatment*SoilVeg, data = metrics)
 summary(mod)
 visreg(mod)
 
+ggplot(metrics, aes(Treatment, intercept))+
+  facet_wrap(~SoilVeg)+
+  geom_point()+
+  geom_boxplot()+
+  ylab("Alpha diversity")+
+  ylim(0,3)+
+  theme_bw()
 
 #beta diversity (slope)
 mod <- lme(slope~Treatment, random = ~1|SoilVeg, data = metrics)
@@ -85,12 +94,21 @@ mod <- lm(slope~Treatment*SoilVeg, data = metrics)
 summary(mod)
 visreg(mod)
 
+ggplot(metrics, aes(Treatment, slope))+
+  facet_wrap(~SoilVeg)+
+  geom_point()+
+  geom_boxplot()+
+  ylab("Beta diversity")+
+  theme_bw()
+
 
 #gamma diversity (saturation point)
 
 
 thousand_m <- rbind( thousand_m)%>%
-  left_join(transect.info, by = "Transect")
+  left_join(transect.info, by = "Transect")%>%
+  dplyr::mutate( Treatment = fct_recode(Treatment, "Impact" = "Drive and Crush", "Control" = "Reference"), SoilVeg = fct_recode(SoilVeg, "Silty Saltbush" = "SiltyAtriplex", "Shallow Creosote" = "ShallowCreosote", "Deep Creosote" = "DeepCreosote"))
+
 
 mod <- lme(species~Treatment, random = ~1|SoilVeg, data = thousand_m)
 summary(mod)
@@ -98,6 +116,17 @@ summary(mod)
 mod <- lm(species~Treatment*SoilVeg, data = thousand_m)
 summary(mod)
 visreg(mod)
+
+
+ggplot(thousand_m, aes(Treatment, species))+
+  facet_wrap(~SoilVeg)+
+  geom_point()+
+  geom_boxplot()+
+  ylab("Gamma diversity")+
+  ylim(0, 50)+
+  theme_bw()
+
+
 
 ##probably delete below
 x <- plot_summ%>%
