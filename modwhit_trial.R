@@ -92,7 +92,7 @@ mod <- lm(intercept~Treatment*SoilVeg, data = metrics)
 summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
-visreg(mod)
+#visreg(mod)
 
 ggplot(metrics, aes(Treatment, intercept))+
   facet_wrap(~SoilVeg)+
@@ -136,7 +136,7 @@ mod <- lm(species~Treatment*SoilVeg, data = thousand_m)
 summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
-visreg(mod)
+#visreg(mod)
 
 
 ggplot(thousand_m, aes(Treatment, species))+
