@@ -468,7 +468,7 @@ thousand.spread <- pivot_wider(thousand_m, names_from = Spp_code, values_from = 
 
 library(vegan)
 #
-matrix_1 <- thousand.spread[,7:89]
+matrix_1 <- thousand.spread[,7:86]
 matrix <- sapply( matrix_1, as.numeric )
 ## Bray-Curtis distances between samples
 dis <- vegdist(matrix)
