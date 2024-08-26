@@ -2,6 +2,8 @@ library(tidyverse)
 library(plyr)
 library(nlme)
 library(emmeans)
+library(vegan)
+library(codyn)
 
 modwhit <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit_clean_2024.csv")
 Mod.whit.spp <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/Mod-whit-spp.csv")
@@ -23,7 +25,13 @@ thousand_m$Quad_num <- 14
 thousand_m$Quad_sz_m2 <- ifelse(thousand_m$Transect == "B14" & thousand_m$Year == 2024, 1250, 1000) #one large plot got sampled at a larger area
 
 
-
+four_thousand_m <- modwhit%>%
+  left_join(transect.info, by = "Transect")%>%
+  subset(Spp_code != "none") %>%
+  ddply(.(Year, SoilVeg, Treatment), function(x)data.frame(
+    species = length(unique(x$Spp_code))
+  ))%>%
+  subset(Year == 2024)
 
 plot_summ <- rbind(all_but_thousand_m, thousand_m)%>%
               unique()%>%
@@ -110,7 +118,7 @@ mod <- lm(slope~Treatment*SoilVeg, data = metrics)
 summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
-visreg(mod)
+#visreg(mod)
 
 ggplot(metrics, aes(Treatment, slope))+
   facet_wrap(~SoilVeg)+
@@ -148,7 +156,12 @@ ggplot(thousand_m, aes(Treatment, species))+
   theme_bw()
 
 
-
+ggplot(four_thousand_m, aes(Treatment, species))+
+  facet_wrap(~SoilVeg)+
+  geom_point()+
+  ylab("4km squared diversity")+
+  ylim(0, 60)+
+  theme_bw()
 
 
 ###### native species
@@ -492,3 +505,70 @@ plot(mod, ellipse = TRUE, hull = FALSE, conf = 0.90) # 90% data ellipse
 plot(mod, axes = c(1,2), seg.col = "forestgreen", seg.lty = "dashed")
 ## Draw a boxplot of the distances to centroid for each group
 boxplot(mod)
+
+
+
+######2023 Deep creosote check
+
+thousand_m <- modwhit%>%
+  left_join(Mod.whit.spp, by = join_by("Spp_code" == "SPP"))%>%
+  left_join(transect.info, by = "Transect")%>%
+  #subset(growth == "Annual")%>%
+  subset(Spp_code != "none" ) %>%
+  subset(Year == 2023)%>%
+  dplyr::select(Transect, Spp_code, SoilVeg, Treatment)%>%
+  unique()
+
+#spread
+thousand_m$present <- 1
+thousand.spread <- pivot_wider(thousand_m, names_from = Spp_code, values_from = present, values_fill = 0)
+
+library(vegan)
+#
+matrix_1 <- thousand.spread[,7:66]
+matrix <- sapply( matrix_1, as.numeric )
+## Bray-Curtis distances between samples
+dis <- vegdist(matrix)
+## extract treatments
+groups <- paste(thousand.spread$Treatment, thousand.spread$SoilVeg)
+## Calculate multivariate dispersions
+mod <- betadisper(dis, groups, type = "centroid")
+mod
+## Perform test
+anova(mod)
+## Permutation test for F
+permutest(mod, pairwise = TRUE, permutations = 99)
+
+## Plot the groups and distances to centroids on the
+## first two PCoA axes
+plot(mod)
+## with data ellipses instead of hulls
+plot(mod, ellipse = TRUE, hull = FALSE) # 1 sd data ellipse
+plot(mod, ellipse = TRUE, hull = FALSE, conf = 0.90) # 90% data ellipse
+## can also specify which axes to plot, ordering respected
+plot(mod, axes = c(1,2), seg.col = "forestgreen", seg.lty = "dashed")
+## Draw a boxplot of the distances to centroid for each group
+boxplot(mod)
+
+
+
+####rank abundance
+rank_abun <- modwhit%>%
+  subset(Quad_sz_m2 == 1)%>%
+  subset(Year == 2024)%>%
+  dplyr::select(Transect, Quad_num,Spp_code, Cover_perc)%>%
+  pivot_wider(names_from = "Spp_code", values_from = "Cover_perc", values_fill = 0)%>%
+  pivot_longer(3:63, names_to = "species", values_to = "cover")%>%
+  left_join(transect.info, by = "Transect")%>%
+  group_by(SoilVeg, Treatment, species)%>%
+  dplyr::summarize(cover = mean(cover))
+
+rank_abun%>%
+  subset(cover > 0.5)%>%
+ggplot( aes(species, cover))+
+  facet_grid(SoilVeg~Treatment)+
+  geom_bar(stat = "identity")
+
+
+
+
