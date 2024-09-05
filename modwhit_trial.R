@@ -131,23 +131,23 @@ ggplot(metrics, aes(Treatment, slope))+
 #gamma diversity (saturation point)
 
 
-thousand_m <- rbind( thousand_m)%>%
+thousand_m_2023 <- rbind( thousand_m)%>%
   left_join(transect.info, by = "Transect")%>%
   dplyr::mutate( Treatment = fct_recode(Treatment, "Impact" = "Drive and Crush", "Control" = "Reference"), SoilVeg = fct_recode(SoilVeg, "Silty Saltbush" = "SiltyAtriplex", "Shallow Creosote" = "ShallowCreosote", "Deep Creosote" = "DeepCreosote"))
 
 
-mod <- lme(species~Treatment, random = ~1|SoilVeg, data = thousand_m)
+mod <- lme(species~Treatment, random = ~1|SoilVeg, data = thousand_m_2023)
 summary(mod)
 
 
-mod <- lm(species~Treatment*SoilVeg, data = thousand_m)
+mod <- lm(species~Treatment*SoilVeg, data = thousand_m_2023)
 summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
 #visreg(mod)
 
 
-ggplot(thousand_m, aes(Treatment, species))+
+ggplot(thousand_m_2023, aes(Treatment, species))+
   facet_wrap(~SoilVeg)+
   geom_point()+
   geom_boxplot()+
@@ -286,23 +286,23 @@ ggplot(metrics, aes(Treatment, slope))+
 #gamma diversity (saturation point)
 
 
-thousand_m <- rbind( thousand_m)%>%
+thousand_m_2023 <- rbind( thousand_m)%>%
   left_join(transect.info, by = "Transect")%>%
   dplyr::mutate( Treatment = fct_recode(Treatment, "Impact" = "Drive and Crush", "Control" = "Reference"), SoilVeg = fct_recode(SoilVeg, "Silty Saltbush" = "SiltyAtriplex", "Shallow Creosote" = "ShallowCreosote", "Deep Creosote" = "DeepCreosote"))
 
 
-mod <- lme(species~Treatment, random = ~1|SoilVeg, data = thousand_m)
+mod <- lme(species~Treatment, random = ~1|SoilVeg, data = thousand_m_2023)
 summary(mod)
 
 
-mod <- lm(species~Treatment*SoilVeg, data = thousand_m)
+mod <- lm(species~Treatment*SoilVeg, data = thousand_m_2023)
 summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
 #visreg(mod)
 
 
-ggplot(thousand_m, aes(Treatment, species))+
+ggplot(thousand_m_2023, aes(Treatment, species))+
   facet_wrap(~SoilVeg)+
   geom_point()+
   geom_boxplot()+
@@ -422,23 +422,23 @@ ggplot(metrics, aes(Treatment, slope))+
 #gamma diversity (saturation point)
 
 
-thousand_m <- rbind( thousand_m)%>%
+thousand_m_2023 <- rbind( thousand_m)%>%
   left_join(transect.info, by = "Transect")%>%
   dplyr::mutate( Treatment = fct_recode(Treatment, "Impact" = "Drive and Crush", "Control" = "Reference"), SoilVeg = fct_recode(SoilVeg, "Silty Saltbush" = "SiltyAtriplex", "Shallow Creosote" = "ShallowCreosote", "Deep Creosote" = "DeepCreosote"))
 
 
-mod <- lme(species~Treatment, random = ~1|SoilVeg, data = thousand_m)
+mod <- lme(species~Treatment, random = ~1|SoilVeg, data = thousand_m_2023)
 summary(mod)
 
 
-mod <- lm(species~Treatment*SoilVeg, data = thousand_m)
+mod <- lm(species~Treatment*SoilVeg, data = thousand_m_2023)
 summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
 #visreg(mod)
 
 
-ggplot(thousand_m, aes(Treatment, species))+
+ggplot(thousand_m_2023, aes(Treatment, species))+
   facet_wrap(~SoilVeg)+
   geom_point()+
   geom_boxplot()+
@@ -554,20 +554,199 @@ boxplot(mod)
 
 ####rank abundance
 rank_abun <- modwhit%>%
-  subset(Quad_sz_m2 == 1)%>%
+  subset(Quad_sz_m2 == 1 & Spp_code != "none")%>%
   subset(Year == 2024)%>%
   dplyr::select(Transect, Quad_num,Spp_code, Cover_perc)%>%
   pivot_wider(names_from = "Spp_code", values_from = "Cover_perc", values_fill = 0)%>%
-  pivot_longer(3:63, names_to = "species", values_to = "cover")%>%
+  pivot_longer(3:62, names_to = "species", values_to = "cover")%>%
   left_join(transect.info, by = "Transect")%>%
   group_by(SoilVeg, Treatment, species)%>%
-  dplyr::summarize(cover = mean(cover))
+  dplyr::summarize(se = sd(cover,na.rm = TRUE)/sqrt(length(cover)),cover = mean(cover, na.rm = TRUE) )
 
 rank_abun%>%
-  subset(cover > 0.5)%>%
+  #subset(cover > 0.5)%>%
+  subset(species == "AMDU2" | species == "ANLA7" |species == "CHRI" |species == "KRER" |species == "LATR2" |species == "MAAF" |species == "SCHIS")%>%
 ggplot( aes(species, cover))+
   facet_grid(SoilVeg~Treatment)+
-  geom_bar(stat = "identity")
+  geom_bar(stat = "identity")+
+  geom_errorbar(aes(x = species, ymin= cover-se, ymax = cover+se))+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90))
+
+
+############
+################
+##compare alpha, beta, gamma over time
+
+metrics <- plot_summ%>%
+  ddply(.(Year,Transect, SoilVeg, Treatment), function(x)data.frame(
+    intercept = summary(lm(log_sp~log_area, data = subset(x, log_sp != "-Inf")))$coefficients[1],
+    slope = summary(lm(log_sp~log_area, data = subset(x, log_sp != "-Inf")))$coefficients[2]
+  )) #add gamma diversity metric (saturation of curve)
+
+#alpha diversity (intercept)
+
+mod <- lme(intercept~Treatment*as.factor(Year), random = ~1|SoilVeg, data = metrics)
+summary(mod)
+
+mod <- lm(intercept~Treatment*SoilVeg*as.factor(Year), data = metrics)
+summary(mod)
+emmeans(mod, ~ Treatment*SoilVeg)
+pairs(emmeans(mod, ~ Treatment*SoilVeg))
+#visreg(mod)
+
+ggplot(metrics, aes(Treatment, intercept, color = as.factor(Year)))+
+  facet_wrap(~SoilVeg)+
+  geom_point()+
+  geom_boxplot()+
+  ylab("Alpha diversity")+
+  ylim(0,3)+
+  theme_bw()
+
+#beta diversity (slope)
+mod <- lme(slope~Treatment*as.factor(Year), random = ~1|SoilVeg, data = metrics)
+summary(mod)
+
+mod <- lm(slope~Treatment*SoilVeg*as.factor(Year), data = metrics)
+summary(mod)
+emmeans(mod, ~ Treatment*SoilVeg)
+pairs(emmeans(mod, ~ Treatment*SoilVeg))
+#visreg(mod)
+
+ggplot(metrics, aes(Treatment, slope, color = as.factor(Year)))+
+  facet_wrap(~SoilVeg)+
+  geom_point()+
+  geom_boxplot()+
+  ylab("Beta diversity")+
+  theme_bw()
+
+
+#gamma diversity
+thousand_m <- modwhit%>%
+  subset(Spp_code != "none") %>%
+  ddply(.(Year, Transect), function(x)data.frame(
+    species = length(unique(x$Spp_code))
+  ))
+thousand_m$Quad_num <- 14
+thousand_m$Quad_sz_m2 <- ifelse(thousand_m$Transect == "B14" & thousand_m$Year == 2024, 1250, 1000) #one large plot got sampled at a larger area
+thousand_m_all <- rbind( thousand_m)%>%
+  left_join(transect.info, by = "Transect")#%>%
+#  dplyr::mutate( Treatment = fct_recode(Treatment, "Impact" = "Drive and Crush", "Control" = "Reference"), SoilVeg = fct_recode(SoilVeg, "Silty Saltbush" = "SiltyAtriplex", "Shallow Creosote" = "ShallowCreosote", "Deep Creosote" = "DeepCreosote"))
+
+
+mod <- lme(species~Treatment*as.factor(Year), random = ~1|SoilVeg, data = thousand_m_all)
+summary(mod)
+
+
+mod <- lm(species~Treatment*SoilVeg*as.factor(Year), data = thousand_m_all)
+summary(mod)
+emmeans(mod, ~ Treatment*SoilVeg)
+pairs(emmeans(mod, ~ Treatment*SoilVeg))
+#visreg(mod)
+
+
+ggplot(thousand_m_all, aes(Treatment, species, color = as.factor(Year)))+
+  facet_wrap(~SoilVeg)+
+  geom_point()+
+  geom_boxplot()+
+  ylab("Gamma diversity")+
+  ylim(0, 50)+
+  theme_bw()
+
+
+ggplot(four_thousand_m, aes(Treatment, species, color = as.factor(Year)))+
+  facet_wrap(~SoilVeg)+
+  geom_point()+
+  ylab("4km squared diversity")+
+  ylim(0, 60)+
+  theme_bw()
+
+
+#################
+########Differences between 2023-2024
+
+all_but_thousand_m <- modwhit%>%
+  subset(Quad_sz_m2 != "1000" & Quad_sz_m2 != "1250")%>%
+  ddply(.(Year, Transect, Quad_num, Quad_sz_m2), function(x)data.frame(
+    species = ifelse(x$Spp_code == "none", 0,
+                     length(x$Spp_code)
+    )))
+
+thousand_m <- modwhit%>%
+  subset(Spp_code != "none") %>%
+  ddply(.(Year, Transect), function(x)data.frame(
+    species = length(unique(x$Spp_code))
+  ))
+thousand_m$Quad_num <- 14
+thousand_m$Quad_sz_m2 <- ifelse(thousand_m$Transect == "B14" & thousand_m$Year == 2024, 1250, 1000) #one large plot got sampled at a larger area
+
+
+#four_thousand_m <- modwhit%>%
+#  left_join(transect.info, by = "Transect")%>%
+#  subset(Spp_code != "none") %>%
+#  ddply(.(Year, SoilVeg, Treatment), function(x)data.frame(
+#    species = length(unique(x$Spp_code))
+#  ))
+
+
+
+plot_summ <- rbind(all_but_thousand_m, thousand_m)%>%
+  unique()%>%
+  left_join(transect.info, by = "Transect")
+
+plot_summ$log_sp <- log(plot_summ$species)
+plot_summ$log_area <- log(plot_summ$Quad_sz_m2)
+
+plot_summ <- dplyr::mutate(plot_summ, Treatment = fct_recode(Treatment, "Impact" = "Drive and Crush", "Control" = "Reference"), SoilVeg = fct_recode(SoilVeg, "Silty Saltbush" = "SiltyAtriplex", "Shallow Creosote" = "ShallowCreosote", "Deep Creosote" = "DeepCreosote"))
+
+diff_metrics <- plot_summ%>%
+  #subset(Year == 2024 )%>%
+  ddply(.(Year, Transect, SoilVeg, Treatment), function(x)data.frame(
+    intercept = summary(lm(log_sp~log_area, data = subset(x, log_sp != "-Inf")))$coefficients[1],
+    slope = summary(lm(log_sp~log_area, data = subset(x, log_sp != "-Inf")))$coefficients[2]
+  ))%>%
+  pivot_wider(names_from = Year, values_from = c("intercept", "slope"))%>%
+  mutate(intercept_diff = intercept_2024-intercept_2023, slope_diff = slope_2024-slope_2023)
+
+##alpha diversity
+ggplot(diff_metrics, aes(Treatment, intercept_diff))+
+  facet_wrap(~SoilVeg)+
+  geom_boxplot()+
+  geom_hline(yintercept = 0)+
+  ylab("Change in alpha diversity (intercept)")+
+  theme_bw()
+
+##beta diversity
+ggplot(diff_metrics, aes(Treatment, slope_diff))+
+  facet_wrap(~SoilVeg)+
+  geom_boxplot()+
+  geom_hline(yintercept = 0)+
+  ylab("Change in beta diversity (slope)")+
+  theme_bw()
+
+
+##1000 m2 richness
+thousand_m$Year = as.factor(thousand_m$Year)
+gamma <- thousand_m%>%
+  dplyr::select(Year, Transect,  species)%>%
+  #revalue(as.factor(Year), c("twentythree"="2023", "twentyfour"="2024"))
+  mutate(Year = as.factor(Year))%>%
+  pivot_wider(names_from = Year, values_from = species)%>%
+  left_join(transect.info)#%>%
+  #dplyr::rename(twentythree = 2023, )
+  #dpylr::summarize(diff = 2024-)
+
+gamma$diff <- gamma$'2024' - gamma$'2023'
+
+
+ggplot(gamma, aes(Treatment, diff))+
+  facet_wrap(~SoilVeg)+
+  geom_boxplot()+
+  geom_hline(yintercept = 0)+
+  ylab("Change in gamma diversity (1 km2)")+
+  theme_bw()
+
+
 
 
 
