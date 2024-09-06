@@ -48,85 +48,30 @@ plot_summ.1 <- dplyr::mutate(plot_summ.1, Treatment = fct_recode(Treatment, "Imp
 
 
 
-#plot_summ%>%
-#  subset(Year == "2024")%>%
-#  ggplot(aes(log_area, log_sp, color = Treatment))+
-#  facet_wrap(~SoilVeg)+
-#  geom_point()+
-#  geom_smooth(method = "lm")+
-#  theme_bw()
-
-#plot_summ%>%
-#  subset(Year == "2024")%>%
-#  ggplot(aes(Quad_sz_m2, species, color = Treatment))+
-#  facet_wrap(~Transect)+
-#  geom_point()+
-#  geom_smooth(method = "glm", formula = y~log(x)#,
-              #method.args = list(family = gaussian(link = 'log'))
-#  )+
-#  theme_bw()
-
-#plot_summ%>%
-#  subset(Year == "2024")%>%
-#  ggplot(aes(log_area, log_sp, color = Treatment))+
-#  facet_wrap(~Transect)+
-#  geom_point()+
-#  geom_smooth(method = "lm"#,
-              #method.args = list(family = gaussian(link = 'log'))
-#  )+
-#  theme_bw()
-
-
-
-#mod <- lme(log_sp~log_area*Treatment, random = ~1|SoilVeg/Transect, data = plot_summ%>%
-#             subset(Year == "2024" & log_sp != "-Inf"))
-#summary(mod)
-
-
-#mod <- lm(species~log_area, data = plot_summ%>%
-#            subset(Transect == "B14" & Year == "2024" & log_sp != "-Inf"))
-#summary(mod)$coefficients[1]
-
-
-#metrics <- plot_summ%>%
-#  subset(Year == 2024 )%>%
-#  ddply(.(Transect, SoilVeg, Treatment), function(x)data.frame(
-#    intercept = summary(lm(log_sp~log_area, data = subset(x, log_sp != "-Inf")))$coefficients[1],
-#    slope = summary(lm(log_sp~log_area, data = subset(x, log_sp != "-Inf")))$coefficients[2]
-#  )) #add gamma diversity metric (saturation of curve)
-
-
-
 #try monte carlo
 
 plot_summ.1 <- plot_summ.1%>%
-  unite(SoilVegTrt.col,SoilVeg:Treatment)
+  unite(SoilVegTrt.col,c("Transect","SoilVeg","Treatment"))
 
 SoilVegTrt <- plot_summ.1%>%
-  dplyr::select(SoilVegTrt.col)%>%
-  unique()
+  dplyr::select(SoilVegTrt.col)
+SoilVegTrt <- unique(SoilVegTrt$SoilVegTrt.col)
+
 master_trimmed_results <- setNames(data.frame(matrix(ncol = 3, nrow = 0)), c("intercept", "slope", "SoilVegTrt"))
 
-for (i in SoilVegTrt) {
+for (i in 1:length(SoilVegTrt)) {
 
 # Calculate correlation coefficient between mpg and wt
 
-plot_summ <- subset(plot_summ.1, log_sp != "-Inf" & SoilVegTrt.col == i)
+plot_summ <- subset(plot_summ.1, log_sp != "-Inf" & SoilVegTrt.col == SoilVegTrt[i])
 correlation <- cor(plot_summ$log_sp, plot_summ$log_area)
 
 sd_sp <- sd(plot_summ$log_sp, na.rm = TRUE)
 sd_area <- sd(plot_summ$log_area, na.rm = TRUE)
 
-#plot_summ%>%
-#  subset(Year == "2024")%>%
-#  group_by(SoilVeg, Treatment)%>%
-#  dplyr::summarize(sd_sp = sd(log_sp, na.rm = TRUE), sd_area = sd(log_area, na.rm = TRUE))
-
-
 # Define covariance matrix based on correlation coefficient
 cov_matrix <- matrix(c(sd_sp^2, correlation * sd_area * sd_sp,
                        correlation * sd_sp * sd_area, sd_area^2), nrow = 2)
-
 
 # Define function to generate synthetic data
 generate_synthetic_data <- function() {
@@ -142,9 +87,8 @@ fit_model <- function(data) {
   return(coef(fit))
 }
 
-
 # Perform Monte Carlo simulation
-num_replications <- 250
+num_replications <- 1000
 
 mc_results <- replicate(num_replications, {
   synthetic_data <- generate_synthetic_data()
@@ -155,9 +99,7 @@ mc_results <- replicate(num_replications, {
 mc_results <- as.data.frame(do.call(rbind, mc_results))
 
 # Print the results
-print(mc_results)
-
-
+#print(mc_results)
 
 # Calculate the centroid of the cluster of regression lines
 centroid <- colMeans(mc_results)
@@ -166,7 +108,7 @@ centroid <- colMeans(mc_results)
 distances <- sqrt(rowSums((mc_results - centroid)^2))
 
 # Specify the percentage of lines to keep (e.g., 95%)
-percentage_to_keep <- 0.95
+percentage_to_keep <- 1#0.95
 
 # Determine the number of lines to keep based on the specified percentage
 num_lines_to_keep <- ceiling(length(distances) * percentage_to_keep)
@@ -177,18 +119,11 @@ indices_to_keep <- order(distances)[1:num_lines_to_keep]
 # Filter out lines that are farthest from the centroid
 trimmed_results <- mc_results[indices_to_keep, ]
 
-# Plot the data with trimmed confidence intervals
-#ggplot(plot_summ, aes(x = log_area, y = log_sp)) +
-#  geom_point() +
-#  geom_abline(data = trimmed_results, aes(intercept = `(Intercept)`, slope = log_area), color = "#f7aa58", alpha = 0.3) +
-#  ggtitle("Monte Carlo Simulation of Linear Regression Confidence Intervals") +
-#  labs(subtitle = "Gemini")
-
 
 ######intercept of trimmed results is alpha diversity intercept
 #####column log_area is beta diversity slope
 
-new_trimmed_results <- data.frame(intercept = trimmed_results$`(Intercept)`, slope = trimmed_results$log_area, SoilVegTrt.col = i)
+new_trimmed_results <- data.frame(intercept = trimmed_results$`(Intercept)`, slope = trimmed_results$log_area, SoilVegTrt.col = SoilVegTrt[i])
 
 
 master_trimmed_results <- rbind(master_trimmed_results, new_trimmed_results)
@@ -197,3 +132,46 @@ rm(new_trimmed_results)
 
 }
 
+mc <- separate(master_trimmed_results, SoilVegTrt.col, into = c("Transect", "SoilVeg", "Treatment"), sep = "_")
+
+
+
+
+##intercept
+ggplot(mc, aes(intercept))+
+  facet_grid(Treatment~SoilVeg)+
+  geom_histogram()
+
+ggplot(mc, aes(Treatment, intercept, color = Treatment))+
+  facet_wrap(~SoilVeg)+
+  geom_boxplot()+
+  theme_bw()
+
+mod <- lme(intercept~Treatment, random = ~1|SoilVeg/Transect, data = mc)
+summary(mod)
+
+mod <- lme(intercept~Treatment*SoilVeg, random = ~1|Transect, data = mc)
+summary(mod)
+emmeans(mod, ~ Treatment*SoilVeg)
+pairs(emmeans(mod, ~ Treatment*SoilVeg))
+
+  
+
+##slope
+ggplot(mc, aes(slope))+
+  facet_grid(Treatment~SoilVeg)+
+  geom_histogram()
+
+ggplot(mc, aes(Treatment, slope, color = Treatment))+
+  facet_wrap(~SoilVeg)+
+  geom_boxplot()+
+  theme_bw()
+
+
+mod <- lme(slope~Treatment, random = ~1|SoilVeg/Transect, data = mc)
+summary(mod)
+
+mod <- lme(slope~Treatment*SoilVeg, random = ~1|Transect, data = mc)
+summary(mod)
+emmeans(mod, ~ Treatment*SoilVeg)
+pairs(emmeans(mod, ~ Treatment*SoilVeg))
