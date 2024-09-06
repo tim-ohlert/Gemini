@@ -108,7 +108,7 @@ centroid <- colMeans(mc_results)
 distances <- sqrt(rowSums((mc_results - centroid)^2))
 
 # Specify the percentage of lines to keep (e.g., 95%)
-percentage_to_keep <- 1#0.95
+percentage_to_keep <- 0.95
 
 # Determine the number of lines to keep based on the specified percentage
 num_lines_to_keep <- ceiling(length(distances) * percentage_to_keep)
@@ -140,7 +140,17 @@ mc <- separate(master_trimmed_results, SoilVegTrt.col, into = c("Transect", "Soi
 ##intercept
 ggplot(mc, aes(intercept))+
   facet_grid(Treatment~SoilVeg)+
-  geom_histogram()
+  geom_histogram()+
+  theme_bw()
+
+ggplot(mc, aes())+
+  facet_grid(Treatment~SoilVeg)+
+  geom_abline(aes(intercept = intercept, slope = slope), alpha = 0.1)+
+  ylim(0,5)+
+  xlim(0,15)+
+  xlab("log(area)")+
+  ylab("log(species)")+
+  theme_bw()
 
 ggplot(mc, aes(Treatment, intercept, color = Treatment))+
   facet_wrap(~SoilVeg)+
@@ -160,7 +170,8 @@ pairs(emmeans(mod, ~ Treatment*SoilVeg))
 ##slope
 ggplot(mc, aes(slope))+
   facet_grid(Treatment~SoilVeg)+
-  geom_histogram()
+  geom_histogram()+
+  theme_bw()
 
 ggplot(mc, aes(Treatment, slope, color = Treatment))+
   facet_wrap(~SoilVeg)+
