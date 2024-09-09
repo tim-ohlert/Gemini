@@ -25,7 +25,7 @@ thousand_m <- modwhit%>%
     species = length(unique(x$Spp_code))
   ))
 thousand_m$Quad_num <- 14
-thousand_m$Quad_sz_m2 <- ifelse(thousand_m$Transect == "B14" & thousand_m$Year == 2024, 1250, 1000) #one large plot got sampled at a larger area
+thousand_m$Quad_sz_m2 <- ifelse(thousand_m$Transect == "B14" & thousand_m$Year == 2024, 1250, 1000) #one large plot B14 got sampled at a larger area
 
 
 four_thousand_m <- modwhit%>%
@@ -88,7 +88,7 @@ fit_model <- function(data) {
 }
 
 # Perform Monte Carlo simulation
-num_replications <- 1000
+num_replications <- 2000
 
 mc_results <- replicate(num_replications, {
   synthetic_data <- generate_synthetic_data()
@@ -143,9 +143,14 @@ ggplot(mc, aes(intercept))+
   geom_histogram()+
   theme_bw()
 
+mean_vals <- mc%>%
+  group_by(SoilVeg, Treatment)%>%
+  dplyr::summarise(intercept = mean(intercept), slope = mean(slope))
+
 ggplot(mc, aes())+
   facet_grid(Treatment~SoilVeg)+
-  geom_abline(aes(intercept = intercept, slope = slope), alpha = 0.1)+
+  geom_abline(aes(intercept = intercept, slope = slope), alpha = 0.01)+
+  geom_abline(data=mean_vals, aes(intercept = intercept, slope = slope), alpha = 1, color = "dodgerblue")+
   ylim(0,5)+
   xlim(0,15)+
   xlab("log(area)")+
