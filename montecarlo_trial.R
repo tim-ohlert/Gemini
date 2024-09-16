@@ -7,6 +7,7 @@ library(vegan)
 library(codyn)
 library(tidyverse)
 library(MASS) 
+library(boot)
 
 modwhit <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit_clean_2024.csv")
 Mod.whit.spp <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/Mod-whit-spp.csv")
@@ -194,6 +195,82 @@ mod <- lme(slope~Treatment*SoilVeg, random = ~1|Transect, data = mc)
 summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
+
+
+
+
+#################################
+#####bootstrapping gamma diversity
+
+four_thousand_m <- modwhit%>%
+  left_join(transect.info, by = "Transect")%>%
+  subset(Spp_code != "none") %>%
+  subset(Year == 2024)%>%
+  dplyr::select(Transect, Spp_code, SoilVeg, Treatment)%>%
+  dplyr::select( Spp_code, SoilVeg, Treatment)%>%
+  unique()
+  #ddply(.(SoilVeg, Treatment), function(x)data.frame(
+  #  species = length(unique(x$Spp_code))
+  #))
+  
+
+
+bs <- function(formula, data, indices)
+{
+  #d <- four_thousand_m[indices,] # allows boot to select sample
+  #fit <- lm(formula, data=d)
+  d <- four_thousand_m%>%
+    subset(SoilVeg == "DeepCreosote" & Treatment == "Reference")%>%
+  ddply(.(SoilVeg, Treatment), function(x)data.frame(
+    species = length(unique(x$Spp_code))
+  ))
+  
+  
+  return(d$species[1])
+}
+# bootstrapping with 1000 replications
+results <- boot(data=mtcars, statistic=bs,
+                R=1000, formula=mpg~wt+disp)
+
+
+
+
+
+# function to obtain R-Squared from the data
+rsq <- function(formula, data, indices)
+{
+  d <- data[indices,] # allows boot to select sample
+  fit <- lm(formula, data=d)
+  return(summary(fit)$r.square)
+}
+# bootstrapping with 1000 replications
+results <- boot(data=mtcars, statistic=rsq,
+                R=1000, formula=mpg~wt+disp)
+
+# view results
+results
+plot(results)
+
+# get 95% confidence interval
+boot.ci(results, type="bca")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
