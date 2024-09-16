@@ -11,6 +11,9 @@ library(MASS)
 modwhit <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit_clean_2024.csv")
 Mod.whit.spp <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/Mod-whit-spp.csv")
 transect.info <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/transect-id-2024.csv")
+disturbance <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit-disturbance.csv")
+disturbance$Treatment <- plyr::revalue(disturbance$Treatment, c("Reference" = "Control", "Drive and Crush" = "Impact"))
+disturbance$SoilVeg <- plyr::revalue(disturbance$SoilVeg, c("DeepCreosote" = "Deep Creosote", "ShallowCreosote" = "Shallow Creosote", "SiltyAtriplex" = "Silty Saltbush"))
 
 all_but_thousand_m <- modwhit%>%
   subset(Quad_sz_m2 != "1000" & Quad_sz_m2 != "1250")%>%
@@ -88,7 +91,7 @@ fit_model <- function(data) {
 }
 
 # Perform Monte Carlo simulation
-num_replications <- 2000
+num_replications <- 1000
 
 mc_results <- replicate(num_replications, {
   synthetic_data <- generate_synthetic_data()
@@ -191,3 +194,32 @@ mod <- lme(slope~Treatment*SoilVeg, random = ~1|Transect, data = mc)
 summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
+
+
+
+
+
+
+
+###distrbance covariates
+
+met_disturb_2024 <- left_join(mc, disturbance, by = c("Transect", "SoilVeg", "Treatment"))
+#revalue(met_disturb_2024$Treatment, c("Control" = "Reference", "Drive and Crush" = "Impact"))
+
+
+met_disturb_2024%>%
+  subset(Treatment == "Impact")%>%
+  ggplot(aes(perc_disturbance_2024, intercept, color = SoilVeg))+
+  #facet_wrap(~SoilVeg)+
+  geom_point(alpha = 0.01)+
+  geom_smooth(method = "lm")+
+  theme_bw()
+
+
+met_disturb_2024%>%
+  subset(Treatment != "Control")%>%
+  ggplot(aes(perc_disturbance_2024, slope, color = SoilVeg))+
+  geom_point(alpha = 0.01)+
+  geom_smooth(method = "lm")+
+  theme_bw()
+
