@@ -65,7 +65,7 @@ master_trimmed_results <- setNames(data.frame(matrix(ncol = 3, nrow = 0)), c("in
 
 for (i in 1:length(SoilVegTrt)) {
 
-# Calculate correlation coefficient between mpg and wt
+# Calculate correlation coefficient 
 
 plot_summ <- subset(plot_summ.1, log_sp != "-Inf" & SoilVegTrt.col == SoilVegTrt[i])
 correlation <- cor(plot_summ$log_sp, plot_summ$log_area)
@@ -208,75 +208,49 @@ four_thousand_m <- modwhit%>%
   subset(Year == 2024)%>%
   dplyr::select(Transect, Spp_code, SoilVeg, Treatment)%>%
   dplyr::select( Spp_code, SoilVeg, Treatment)%>%
-  unique()
+  unite(SoilVegTrt.col,c("SoilVeg","Treatment"))
+ # unique()
   #ddply(.(SoilVeg, Treatment), function(x)data.frame(
   #  species = length(unique(x$Spp_code))
   #))
   
 
+SoilVegTrt <- four_thousand_m%>%
+  dplyr::select(SoilVegTrt.col)
+SoilVegTrt <- unique(SoilVegTrt$SoilVegTrt.col)
 
-bs <- function(formula, data, indices)
-{
-  #d <- four_thousand_m[indices,] # allows boot to select sample
-  #fit <- lm(formula, data=d)
-  d <- four_thousand_m%>%
-    subset(SoilVeg == "DeepCreosote" & Treatment == "Reference")%>%
-  ddply(.(SoilVeg, Treatment), function(x)data.frame(
-    species = length(unique(x$Spp_code))
-  ))
+master_gamma_results <- setNames(data.frame(matrix(ncol = 2, nrow = 0)), c("SoilVegTrt.col", "sr"))
+
+
+for (i in 1:length(SoilVegTrt)) {
+
+sr_boot.temp <-  replicate(1000,{
+  d <- subset(four_thousand_m, SoilVegTrt.col == SoilVegTrt[i])
   
+  temp <- sample(x = d$Spp_code, size = length(d$Spp_code), replace = TRUE)
+    temp.sr <- as.numeric(length(unique(temp)))
+  } )
+
+new_results <- data.frame(SoilVegTrt.col = SoilVegTrt[i], sr = sr_boot.temp)
+
+master_gamma_results <- rbind(master_gamma_results, new_results)
+
+rm(new_results)
+rm(sr_boot.temp)
+}
   
-  return(d$species[1])
-}
-# bootstrapping with 1000 replications
-results <- boot(data=mtcars, statistic=bs,
-                R=1000, formula=mpg~wt+disp)
 
 
 
+ggplot(master_gamma_results, aes(SoilVegTrt.col, sr))+
+  geom_boxplot()+
+  theme_bw()
 
 
-# function to obtain R-Squared from the data
-rsq <- function(formula, data, indices)
-{
-  d <- data[indices,] # allows boot to select sample
-  fit <- lm(formula, data=d)
-  return(summary(fit)$r.square)
-}
-# bootstrapping with 1000 replications
-results <- boot(data=mtcars, statistic=rsq,
-                R=1000, formula=mpg~wt+disp)
-
-# view results
-results
-plot(results)
-
-# get 95% confidence interval
-boot.ci(results, type="bca")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
+######################
+############
+  
 
 ###distrbance covariates
 
