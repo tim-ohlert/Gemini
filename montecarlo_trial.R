@@ -241,11 +241,21 @@ rm(sr_boot.temp)
   
 
 
+master_gamma_results <- master_gamma_results%>%
+  separate(SoilVegTrt.col, c("SoilVeg","Treatment"), sep = "_")
 
-ggplot(master_gamma_results, aes(SoilVegTrt.col, sr))+
+ggplot(master_gamma_results, aes(Treatment, sr))+
+  facet_wrap(~SoilVeg)+
   geom_boxplot()+
+  ylim(0,60)+
+  xlab("")+
+  ylab("Richness (4,000 m2)")+
   theme_bw()
 
+mod <- lm(sr~Treatment*SoilVeg, data = master_gamma_results)
+summary(mod)
+emmeans(mod, ~ Treatment*SoilVeg)
+pairs(emmeans(mod, ~ Treatment*SoilVeg))
 
   
 ######################

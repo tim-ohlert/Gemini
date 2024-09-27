@@ -575,6 +575,61 @@ ggplot( aes(species, cover))+
   theme(axis.text.x = element_text(angle = 90))
 
 
+
+## rank abundance change
+rank_abun_change <- modwhit%>%
+  subset(Quad_sz_m2 == 1 & Spp_code != "none")%>%
+  dplyr::select(Year, Transect, Quad_num,Spp_code, Cover_perc)%>%
+  pivot_wider(names_from = "Spp_code", values_from = "Cover_perc", values_fill = 0)%>%
+  pivot_longer(4:68, names_to = "species", values_to = "cover")%>%
+  left_join(transect.info, by = "Transect")%>%
+  pivot_wider(names_from = "Year", values_from = "cover")
+
+rank_abun_change$change <- rank_abun_change$'2024' - rank_abun_change$'2023'
+
+rank_abun_change <- rank_abun_change%>%
+  group_by( SoilVeg, Treatment, Transect, species)%>%
+  dplyr::summarize(change = mean(change, na.rm = TRUE) )%>%
+  group_by( SoilVeg, Treatment, species)%>%
+  dplyr::summarize(se = sd(change,na.rm = TRUE)/sqrt(length(change)),cover = mean(change, na.rm = TRUE) )
+
+rank_abun_change_diff <- rank_abun_change%>%
+  dplyr::select(SoilVeg, Treatment, species, cover)%>%
+  pivot_wider(names_from = "Treatment", values_from = "cover")
+
+rank_abun_change_diff$diff <- rank_abun_change_diff$'Drive and Crush' - rank_abun_change_diff$Reference
+
+
+rank_abun_change%>%
+  subset(cover > 0.5 | cover <0.5)%>%
+  #subset(species == "AMDU2" | species == "ANLA7" |species == "CHRI" |species == "KRER" |species == "LATR2" |species == "MAAF" |species == "SCHIS")%>%
+  ggplot( aes(species, cover))+
+  facet_grid(SoilVeg~Treatment)+
+  #geom_point()+
+  geom_bar(stat = "identity")+
+  ylab("Change in cover")+
+  geom_errorbar(aes(x = species, ymin= cover-se, ymax = cover+se))+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90))
+
+
+
+
+rank_abun_change_diff%>%
+  subset(diff > 0.25 | diff < -0.25)%>%
+  #subset(species == "AMDU2" | species == "ANLA7" |species == "CHRI" |species == "KRER" |species == "LATR2" |species == "MAAF" |species == "SCHIS")%>%
+  ggplot( aes(species, diff))+
+  facet_wrap(~SoilVeg)+
+  #geom_point()+
+  geom_bar(stat = "identity")+
+  ylab("Change in cover relative to reference")+
+  geom_hline(yintercept = 0)+
+  #geom_errorbar(aes(x = species, ymin= diff-se, ymax = diff+se))+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90))
+
+
+
 ############
 ################
 ##compare alpha, beta, gamma over time
