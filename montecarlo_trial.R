@@ -145,6 +145,8 @@ mc <- separate(master_trimmed_results, SoilVegTrt.col, into = c("Transect", "Soi
 ggplot(mc, aes(intercept))+
   facet_grid(Treatment~SoilVeg)+
   geom_histogram()+
+  xlab("log(c)")+
+  xlim(0,3)+
   theme_bw()
 
 mean_vals <- mc%>%
@@ -164,6 +166,10 @@ ggplot(mc, aes())+
 ggplot(mc, aes(Treatment, intercept, color = Treatment))+
   facet_wrap(~SoilVeg)+
   geom_boxplot()+
+  scale_color_manual(values = c("black", "blue"))+
+  xlab("")+
+  ylab("log(c)")+
+  ylim(0,3)+
   theme_bw()
 
 mod <- lme(intercept~Treatment, random = ~1|SoilVeg/Transect, data = mc)
@@ -180,11 +186,15 @@ pairs(emmeans(mod, ~ Treatment*SoilVeg))
 ggplot(mc, aes(slope))+
   facet_grid(Treatment~SoilVeg)+
   geom_histogram()+
+  xlab("z")+
+  xlim(-0.35,0.75)+
   theme_bw()
 
 ggplot(mc, aes(Treatment, slope, color = Treatment))+
   facet_wrap(~SoilVeg)+
   geom_boxplot()+
+  scale_color_manual(values = c("black", "blue"))+
+  xlab("")+
   theme_bw()
 
 
@@ -244,9 +254,12 @@ rm(sr_boot.temp)
 master_gamma_results <- master_gamma_results%>%
   separate(SoilVegTrt.col, c("SoilVeg","Treatment"), sep = "_")
 
-ggplot(master_gamma_results, aes(Treatment, sr))+
+master_gamma_results$Treatment <- revalue(master_gamma_results$Treatment, c("Drive and Crush" = "Impact", "Reference" = "Control" ))
+
+ggplot(master_gamma_results, aes(Treatment, sr, color = Treatment))+
   facet_wrap(~SoilVeg)+
   geom_boxplot()+
+  scale_color_manual(values = c("black", "blue"))+
   ylim(0,60)+
   xlab("")+
   ylab("Richness (4,000 m2)")+
@@ -274,6 +287,8 @@ met_disturb_2024%>%
   #facet_wrap(~SoilVeg)+
   geom_point(alpha = 0.01)+
   geom_smooth(method = "lm")+
+  ylab("Intercept (log(c)")+
+  xlab("Percent disturbance")+
   theme_bw()
 
 
@@ -282,5 +297,7 @@ met_disturb_2024%>%
   ggplot(aes(perc_disturbance_2024, slope, color = SoilVeg))+
   geom_point(alpha = 0.01)+
   geom_smooth(method = "lm")+
+  ylab("Slope (z)")+
+  xlab("Percent disturbance")+
   theme_bw()
 
