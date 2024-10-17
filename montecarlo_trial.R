@@ -168,7 +168,7 @@ ggplot(mc, aes(Treatment, intercept, color = Treatment))+
   geom_boxplot()+
   scale_color_manual(values = c("black", "blue"))+
   xlab("")+
-  ylab("log(c)")+
+  ylab("Alpha dversity [log(c)]")+
   ylim(0,3)+
   theme_bw()
 
@@ -195,6 +195,7 @@ ggplot(mc, aes(Treatment, slope, color = Treatment))+
   geom_boxplot()+
   scale_color_manual(values = c("black", "blue"))+
   xlab("")+
+  ylab("Beta diversity (z)")+
   theme_bw()
 
 
@@ -262,7 +263,7 @@ ggplot(master_gamma_results, aes(Treatment, sr, color = Treatment))+
   scale_color_manual(values = c("black", "blue"))+
   ylim(0,60)+
   xlab("")+
-  ylab("Richness (4,000 m2)")+
+  ylab("Gamma diversity (4,000 m2 richness)")+
   theme_bw()
 
 mod <- lm(sr~Treatment*SoilVeg, data = master_gamma_results)
@@ -287,7 +288,7 @@ met_disturb_2024%>%
   #facet_wrap(~SoilVeg)+
   geom_point(alpha = 0.01)+
   geom_smooth(method = "lm")+
-  ylab("Intercept (log(c)")+
+  ylab("Alpha diversity (log(c)")+
   xlab("Percent disturbance")+
   theme_bw()
 
