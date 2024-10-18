@@ -616,17 +616,83 @@ rank_abun_change%>%
 
 
 rank_abun_change_diff%>%
+  left_join(Mod.whit.spp, join_by(species == SPP))%>%
   subset(diff > 0.25 | diff < -0.25)%>%
+  subset(SoilVeg == "DeepCreosote")%>%
   #subset(species == "AMDU2" | species == "ANLA7" |species == "CHRI" |species == "KRER" |species == "LATR2" |species == "MAAF" |species == "SCHIS")%>%
-  ggplot( aes(species, diff))+
-  facet_wrap(~SoilVeg)+
+  ggplot( aes(taxa, diff))+
+#  facet_wrap(~SoilVeg)+
   #geom_point()+
   geom_bar(stat = "identity")+
   ylab("Change in cover relative to reference")+
   geom_hline(yintercept = 0)+
   #geom_errorbar(aes(x = species, ymin= diff-se, ymax = diff+se))+
+  ylim(-3.5, 3.6)+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90))
+
+
+rank_abun_change_diff%>%
+  left_join(Mod.whit.spp, join_by(species == SPP))%>%
+  subset(diff > 0.25 | diff < -0.25)%>%
+  subset(SoilVeg == "ShallowCreosote")%>%
+  #subset(species == "AMDU2" | species == "ANLA7" |species == "CHRI" |species == "KRER" |species == "LATR2" |species == "MAAF" |species == "SCHIS")%>%
+  ggplot( aes(taxa, diff))+
+  #  facet_wrap(~SoilVeg)+
+  #geom_point()+
+  geom_bar(stat = "identity")+
+  ylab("Change in cover relative to reference")+
+  geom_hline(yintercept = 0)+
+  #geom_errorbar(aes(x = species, ymin= diff-se, ymax = diff+se))+
+  ylim(-3.5, 3.6)+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90))
+
+
+
+
+
+rank_abun_change_diff%>%
+  left_join(Mod.whit.spp, join_by(species == SPP))%>%
+  subset(diff > 0.25 | diff < -0.25)%>%
+  subset(SoilVeg == "SiltyAtriplex")%>%
+  #subset(species == "AMDU2" | species == "ANLA7" |species == "CHRI" |species == "KRER" |species == "LATR2" |species == "MAAF" |species == "SCHIS")%>%
+  ggplot( aes(taxa, diff))+
+  #  facet_wrap(~SoilVeg)+
+  #geom_point()+
+  geom_bar(stat = "identity")+
+  ylab("Change in cover relative to reference")+
+  geom_hline(yintercept = 0)+
+  #geom_errorbar(aes(x = species, ymin= diff-se, ymax = diff+se))+
+  ylim(-3.5, 3.6)+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90))
+
+
+
+#############
+###species changes across disturbance gradients
+diff <- modwhit%>%
+  subset(Quad_sz_m2 == 1 & Spp_code != "none")%>%
+  dplyr::select(Year, Transect, Quad_num,Spp_code, Cover_perc)%>%
+  pivot_wider(names_from = "Spp_code", values_from = "Cover_perc", values_fill = 0)%>%
+  pivot_longer(4:68, names_to = "species", values_to = "cover")%>%
+  pivot_wider(names_from = "Year", values_from = "cover")
+  #left_join(transect.info, by = "Transect")
+
+diff$change <- diff$'2023' - diff$'2024'
+
+diff <- left_join(diff, disturbance, by = "Transect")
+
+diff%>%
+  subset(Treatment != "Control")%>%
+ggplot( aes(perc_disturbance_2024, change, color = SoilVeg))+
+  facet_wrap(~species)+
+  geom_point()+
+  geom_smooth()+
+  ylim(-25, 25)+
+  theme_bw()
+
 
 
 
