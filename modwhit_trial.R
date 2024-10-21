@@ -620,7 +620,7 @@ rank_abun_change_diff%>%
   subset(diff > 0.25 | diff < -0.25)%>%
   subset(SoilVeg == "DeepCreosote")%>%
   #subset(species == "AMDU2" | species == "ANLA7" |species == "CHRI" |species == "KRER" |species == "LATR2" |species == "MAAF" |species == "SCHIS")%>%
-  ggplot( aes(taxa, diff))+
+  ggplot( aes(taxa, diff, fill = native))+
 #  facet_wrap(~SoilVeg)+
   #geom_point()+
   geom_bar(stat = "identity")+
@@ -637,7 +637,7 @@ rank_abun_change_diff%>%
   subset(diff > 0.25 | diff < -0.25)%>%
   subset(SoilVeg == "ShallowCreosote")%>%
   #subset(species == "AMDU2" | species == "ANLA7" |species == "CHRI" |species == "KRER" |species == "LATR2" |species == "MAAF" |species == "SCHIS")%>%
-  ggplot( aes(taxa, diff))+
+  ggplot( aes(taxa, diff, fill = native))+
   #  facet_wrap(~SoilVeg)+
   #geom_point()+
   geom_bar(stat = "identity")+
@@ -657,7 +657,7 @@ rank_abun_change_diff%>%
   subset(diff > 0.25 | diff < -0.25)%>%
   subset(SoilVeg == "SiltyAtriplex")%>%
   #subset(species == "AMDU2" | species == "ANLA7" |species == "CHRI" |species == "KRER" |species == "LATR2" |species == "MAAF" |species == "SCHIS")%>%
-  ggplot( aes(taxa, diff))+
+  ggplot( aes(taxa, diff, fill = native))+
   #  facet_wrap(~SoilVeg)+
   #geom_point()+
   geom_bar(stat = "identity")+
