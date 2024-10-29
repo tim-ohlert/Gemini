@@ -28,12 +28,15 @@ shannon <- modwhit.one%>%
   separate("rep", into = c("Transect", "Quad_num"))%>%
   left_join(disturbance, "Transect")
 
+shannon$Treatment <- revalue(shannon$Treatment, c("Drive and Crush" = "Impact", "Reference" = "Control" ))
 
 shannon%>%
   subset(Year == 2024)%>%
 ggplot( aes(Treatment, Shannon, color = Treatment))+
   facet_wrap(~SoilVeg)+
+  scale_color_manual(values = c("black", "blue"))+
   geom_boxplot()+
+  xlab("")+
   theme_bw()
 
 mod <- lme(Shannon~Treatment*SoilVeg, random = ~1|Transect, data = subset(shannon, Year == 2024))
@@ -48,11 +51,16 @@ even <- modwhit.one%>%
   separate("rep", into = c("Transect", "Quad_num"))%>%
   left_join(disturbance, "Transect")
 
+even$Treatment <- revalue(even$Treatment, c("Drive and Crush" = "Impact", "Reference" = "Control" ))
+
+
 even%>%
   subset(Year == 2024)%>%
 ggplot( aes(Treatment, Evar, color = Treatment))+
   facet_wrap(~SoilVeg)+
+  scale_color_manual(values = c("black", "blue"))+
   geom_boxplot()+
+  xlab("")+
   theme_bw()
 
 mod <- lme(Evar~Treatment*SoilVeg, random = ~1|Transect, data = subset(even, Year == 2024 & Evar != "NA"))
@@ -65,7 +73,10 @@ even%>%
   subset(Year == 2024)%>%
   ggplot( aes(Treatment, richness, color = Treatment))+
   facet_wrap(~SoilVeg)+
+  scale_color_manual(values = c("black", "blue"))+
   geom_boxplot()+
+  xlab("")+
+  ylim(0,20)+
   theme_bw()
 
 
