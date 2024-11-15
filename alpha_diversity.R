@@ -87,6 +87,28 @@ pairs(emmeans(mod, ~ Treatment*SoilVeg))
 
 
 
+#dsturbance->richness
+subset(even, Year == 2024 & Treatment == "Impact")%>%
+ggplot(aes(perc_disturbance_2024, richness, color = SoilVeg))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  theme_bw()
+
+#disturbance->evenness
+subset(even, Year == 2024 & Treatment == "Impact")%>%
+  ggplot(aes(perc_disturbance_2024, Evar, color = SoilVeg))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  theme_bw()
+
+#disturbance->shannon
+subset(shannon, Year == 2024 & Treatment == "Impact")%>%
+  ggplot(aes(perc_disturbance_2024, Shannon, color = SoilVeg))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  theme_bw()
+
+
 
 
 ###INDICATOR SPECIES ANALYSIS TRIAL
@@ -124,6 +146,8 @@ indval <- multipatt(x
                     , subset(wide, SoilVeg == "SiltyAtriplex" & Year == 2024)$Treatment, 
                     control = how(nperm=999)) 
 summary(indval)
+
+
 
 
 
