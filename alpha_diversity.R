@@ -18,7 +18,8 @@ modwhit.one <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit_clean_2024
 Mod.whit.spp <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/Mod-whit-spp.csv")
 transect.info <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/transect-id-2024.csv")
 disturbance <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit-disturbance.csv")
-
+disturbance_quad <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit_disturbance.csv")
+disturbance_quad$Quad_num <- as.character(disturbance_quad$Quad_num)
 
 
 
@@ -26,7 +27,8 @@ shannon <- modwhit.one%>%
     unite("rep", c("Transect", "Quad_num" ))%>%
   community_diversity(time.var = "Year", abundance.var = "Cover_perc", replicate.var = "rep", metric = "Shannon")%>%
   separate("rep", into = c("Transect", "Quad_num"))%>%
-  left_join(disturbance, "Transect")
+  left_join(disturbance_quad, by = c("Transect", "Quad_num"))%>%
+  left_join(transect.info, by = "Transect")
 
 shannon$Treatment <- revalue(shannon$Treatment, c("Drive and Crush" = "Impact", "Reference" = "Control" ))
 
@@ -49,7 +51,8 @@ even <- modwhit.one%>%
   unite("rep", c("Transect", "Quad_num" ))%>%
   community_structure(time.var = "Year", abundance.var = "Cover_perc", replicate.var = "rep", metric = "Evar")%>%
   separate("rep", into = c("Transect", "Quad_num"))%>%
-  left_join(disturbance, "Transect")
+  left_join(disturbance_quad, by = c("Transect", "Quad_num"))%>%
+  left_join(transect.info, by = "Transect")
 
 even$Treatment <- revalue(even$Treatment, c("Drive and Crush" = "Impact", "Reference" = "Control" ))
 
@@ -89,21 +92,24 @@ pairs(emmeans(mod, ~ Treatment*SoilVeg))
 
 #dsturbance->richness
 subset(even, Year == 2024 & Treatment == "Impact")%>%
-ggplot(aes(perc_disturbance_2024, richness, color = SoilVeg))+
+ggplot(aes(summ_perc_dist, richness, color = SoilVeg))+
+  facet_wrap(~SoilVeg)+
   geom_point()+
   geom_smooth(method = "lm")+
   theme_bw()
 
 #disturbance->evenness
 subset(even, Year == 2024 & Treatment == "Impact")%>%
-  ggplot(aes(perc_disturbance_2024, Evar, color = SoilVeg))+
+  ggplot(aes(summ_perc_dist, Evar, color = SoilVeg))+
+  facet_wrap(~SoilVeg)+
   geom_point()+
   geom_smooth(method = "lm")+
   theme_bw()
 
 #disturbance->shannon
 subset(shannon, Year == 2024 & Treatment == "Impact")%>%
-  ggplot(aes(perc_disturbance_2024, Shannon, color = SoilVeg))+
+  ggplot(aes(summ_perc_dist, Shannon, color = SoilVeg))+ 
+  facet_wrap(~SoilVeg)+
   geom_point()+
   geom_smooth(method = "lm")+
   theme_bw()

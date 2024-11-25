@@ -211,7 +211,7 @@ pairs(emmeans(mod, ~ Treatment*SoilVeg))
 
 
 #################################
-#####bootstrapping gamma diversity
+#####bootstrapping gamma diversity 4000m
 
 four_thousand_m <- modwhit%>%
   left_join(transect.info, by = "Transect")%>%
@@ -271,7 +271,70 @@ summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
 
+
+
+#################################
+#####bootstrapping gamma diversity 1000m
+
+one_thousand_m <- modwhit%>%
+  left_join(transect.info, by = "Transect")%>%
+  subset(Spp_code != "none") %>%
+  subset(Year == 2024)%>%
+  dplyr::select(Transect, Spp_code, SoilVeg, Treatment)%>%
+  #dplyr::select( Spp_code, SoilVeg, Treatment)%>%
+  unite(SoilVegTrtTransect.col,c("SoilVeg","Treatment", "Transect"))
+# unique()
+#ddply(.(SoilVeg, Treatment), function(x)data.frame(
+#  species = length(unique(x$Spp_code))
+#))
+
+
+SoilVegTrtTransect <- one_thousand_m%>%
+  dplyr::select(SoilVegTrtTransect.col)
+SoilVegTrtTransect <- unique(SoilVegTrtTransect$SoilVegTrtTransect.col)
+
+master_gamma_results <- setNames(data.frame(matrix(ncol = 2, nrow = 0)), c("SoilVegTrtTransect.col", "sr"))
+
+
+for (i in 1:length(SoilVegTrtTransect)) {
   
+  sr_boot.temp <-  replicate(1000,{
+    d <- subset(one_thousand_m, SoilVegTrtTransect.col == SoilVegTrtTransect[i])
+    
+    temp <- sample(x = d$Spp_code, size = length(d$Spp_code), replace = TRUE)
+    temp.sr <- as.numeric(length(unique(temp)))
+  } )
+  
+  new_results <- data.frame(SoilVegTrtTransect.col = SoilVegTrtTransect[i], sr = sr_boot.temp)
+  
+  master_gamma_results <- rbind(master_gamma_results, new_results)
+  
+  rm(new_results)
+  rm(sr_boot.temp)
+}
+
+####Tim shoud check the models below. Might need to account for transect?
+
+master_gamma_results <- master_gamma_results%>%
+  separate(SoilVegTrtTransect.col, c("SoilVeg","Treatment", "Transect"), sep = "_")
+
+master_gamma_results$Treatment <- revalue(master_gamma_results$Treatment, c("Drive and Crush" = "Impact", "Reference" = "Control" ))
+
+ggplot(master_gamma_results, aes(Treatment, sr, color = Treatment))+
+  facet_wrap(~SoilVeg)+
+  geom_boxplot()+
+  scale_color_manual(values = c("black", "blue"))+
+  ylim(0,60)+
+  xlab("")+
+  ylab("Gamma diversity (1,000 m2 richness)")+
+  theme_bw()
+
+mod <- lm(sr~Treatment*SoilVeg, data = master_gamma_results)
+summary(mod)
+emmeans(mod, ~ Treatment*SoilVeg)
+pairs(emmeans(mod, ~ Treatment*SoilVeg))
+
+
 ######################
 ############
   

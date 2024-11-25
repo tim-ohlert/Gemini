@@ -9,6 +9,7 @@ modwhit <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit_clean_2024.csv
 Mod.whit.spp <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/Mod-whit-spp.csv")
 transect.info <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/transect-id-2024.csv")
 disturbance <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit-disturbance.csv")
+disturbance_quad <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit_disturbance.csv")
 
 all_but_thousand_m <- modwhit%>%
                   subset(Quad_sz_m2 != "1000" & Quad_sz_m2 != "1250")%>%
@@ -872,16 +873,8 @@ ggplot(gamma, aes(Treatment, diff))+
 
 ###distrbance covariates
 
-met_disturb_2024 <- left_join(metrics, disturbance, by = c("Transect", "SoilVeg", "Treatment"))%>%
+met_disturb_2024_beta <- left_join(metrics, disturbance, by = c("Transect", "SoilVeg", "Treatment"))%>%
   subset(Year == "2024")
-
-
-met_disturb_2024%>%
-  subset(Treatment != "Reference")%>%
-  ggplot(aes(perc_disturbance_2024, intercept, color = SoilVeg))+
-  geom_point()+
-  geom_smooth(method = "lm")+
-  theme_bw()
 
 
 met_disturb_2024%>%
@@ -892,6 +885,7 @@ met_disturb_2024%>%
   theme_bw()
 
 
-
+met_disturb_2024_rich <- left_join(metrics, disturbance, by = c("Transect", "SoilVeg", "Treatment"))%>%
+  subset(Year == "2024")
 
 
