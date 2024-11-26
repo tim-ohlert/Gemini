@@ -96,6 +96,8 @@ ggplot(aes(summ_perc_dist, richness, color = SoilVeg))+
   facet_wrap(~SoilVeg)+
   geom_point()+
   geom_smooth(method = "lm")+
+  ylab("Richness")+
+  xlab("Percent disturbance")+
   theme_bw()
 
 #disturbance->evenness
@@ -104,6 +106,8 @@ subset(even, Year == 2024 & Treatment == "Impact")%>%
   facet_wrap(~SoilVeg)+
   geom_point()+
   geom_smooth(method = "lm")+
+  ylab("Eveness")+
+  xlab("Percent disturbance")+
   theme_bw()
 
 #disturbance->shannon
@@ -112,6 +116,8 @@ subset(shannon, Year == 2024 & Treatment == "Impact")%>%
   facet_wrap(~SoilVeg)+
   geom_point()+
   geom_smooth(method = "lm")+
+  ylab("Shannon's diversity")+
+  xlab("Percent disturbance")+
   theme_bw()
 
 

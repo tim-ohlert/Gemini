@@ -313,8 +313,6 @@ for (i in 1:length(SoilVegTrtTransect)) {
   rm(sr_boot.temp)
 }
 
-####Tim shoud check the models below. Might need to account for transect?
-
 master_gamma_results <- master_gamma_results%>%
   separate(SoilVegTrtTransect.col, c("SoilVeg","Treatment", "Transect"), sep = "_")
 
@@ -329,7 +327,7 @@ ggplot(master_gamma_results, aes(Treatment, sr, color = Treatment))+
   ylab("Gamma diversity (1,000 m2 richness)")+
   theme_bw()
 
-mod <- lm(sr~Treatment*SoilVeg, data = master_gamma_results)
+mod <- lme(sr~Treatment*SoilVeg, random = ~1|Transect, data = master_gamma_results)
 summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
@@ -365,3 +363,39 @@ met_disturb_2024%>%
   xlab("Percent disturbance")+
   theme_bw()
 
+
+
+gamma_disturb_2024 <- left_join(master_gamma_results, disturbance, by = c("Transect", "Treatment"))
+
+gamma_disturb_2024%>%
+  subset(Treatment != "Control")%>%
+  ggplot(aes(perc_disturbance_2024, sr, color = SoilVeg.y))+
+  facet_wrap(~SoilVeg.y)+
+  geom_point(alpha = 0.01)+
+  geom_smooth(method = "lm")+
+  ylab("1,000 m2 richness")+
+  xlab("Percent disturbance")+
+  theme_bw()
+
+
+mod <- lme(sr~perc_disturbance_2024*SoilVeg.y, random = ~1|Transect, data = gamma_disturb_2024)
+summary(mod)
+emtrends(mod, ~ perc_disturbance_2024*SoilVeg.y)
+pairs(emmeans(mod, ~ perc_disturbance_2024*SoilVeg.y))
+emtrends(mod, ~ perc_disturbance_2024| SoilVeg.y, var = "perc_disturbance_2024")
+emmeans(emtrends(mod, ~  SoilVeg.y, var = "perc_disturbance_2024"), "SoilVeg.y")
+
+library(MuMIn)
+mod <- lme(sr~perc_disturbance_2024, random = ~1|Transect, data = subset(gamma_disturb_2024, SoilVeg.y == "Deep Creosote"))
+summary(mod)
+r.squaredGLMM(mod)
+
+
+mod <- lme(sr~perc_disturbance_2024, random = ~1|Transect, data = subset(gamma_disturb_2024, SoilVeg.y == "Shallow Creosote"))
+summary(mod)
+r.squaredGLMM(mod)
+
+
+mod <- lme(sr~perc_disturbance_2024, random = ~1|Transect, data = subset(gamma_disturb_2024, SoilVeg.y == "Silty Saltbush"))
+summary(mod)
+r.squaredGLMM(mod)
