@@ -8,6 +8,7 @@ library(codyn)
 library(tidyverse)
 library(MASS) 
 library(boot)
+library(ggtheme)
 
 modwhit <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit_clean_2024.csv")
 Mod.whit.spp <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/Mod-whit-spp.csv")
@@ -147,7 +148,7 @@ ggplot(mc, aes(intercept))+
   geom_histogram()+
   xlab("log(c)")+
   xlim(0,3)+
-  theme_bw()
+  theme_base()
 
 mean_vals <- mc%>%
   group_by(SoilVeg, Treatment)%>%
@@ -161,7 +162,7 @@ ggplot(mc, aes())+
   xlim(0,15)+
   xlab("log(area)")+
   ylab("log(species)")+
-  theme_bw()
+  theme_base()
 
 ggplot(mc, aes(Treatment, intercept, color = Treatment))+
   facet_wrap(~SoilVeg)+
@@ -170,7 +171,7 @@ ggplot(mc, aes(Treatment, intercept, color = Treatment))+
   xlab("")+
   ylab("Alpha dversity [log(c)]")+
   ylim(0,3)+
-  theme_bw()
+  theme_base()
 
 mod <- lme(intercept~Treatment, random = ~1|SoilVeg/Transect, data = mc)
 summary(mod)
@@ -188,15 +189,26 @@ ggplot(mc, aes(slope))+
   geom_histogram()+
   xlab("z")+
   xlim(-0.35,0.75)+
-  theme_bw()
+  theme_base()
 
-ggplot(mc, aes(Treatment, slope, color = Treatment))+
+ggplot(mc, aes(Treatment, slope, fill = SoilVeg))+
   facet_wrap(~SoilVeg)+
   geom_boxplot()+
-  scale_color_manual(values = c("black", "blue"))+
+  scale_fill_manual(values = c("#F29746", "#FFE793", "#4F93A7"))+
   xlab("")+
   ylab("Beta diversity (z)")+
-  theme_bw()
+  theme_base()
+
+ggsave("C:/Users/ohler/Dropbox/grants/Gemini/figures/betadiv.pdf",
+       plot = last_plot(),
+       device = "pdf",
+       path = NULL,
+       scale = 1,
+       width = 8,
+       height = 4,
+       units = c("in"),
+       dpi = 600,
+       limitsize = TRUE)
 
 
 mod <- lme(slope~Treatment, random = ~1|SoilVeg/Transect, data = mc)
@@ -264,7 +276,7 @@ ggplot(master_gamma_results, aes(Treatment, sr, color = Treatment))+
   ylim(0,60)+
   xlab("")+
   ylab("Gamma diversity (4,000 m2 richness)")+
-  theme_bw()
+  theme_base()
 
 mod <- lm(sr~Treatment*SoilVeg, data = master_gamma_results)
 summary(mod)
@@ -318,14 +330,26 @@ master_gamma_results <- master_gamma_results%>%
 
 master_gamma_results$Treatment <- revalue(master_gamma_results$Treatment, c("Drive and Crush" = "Impact", "Reference" = "Control" ))
 
-ggplot(master_gamma_results, aes(Treatment, sr, color = Treatment))+
+ggplot(master_gamma_results, aes(Treatment, sr, fill = SoilVeg))+
   facet_wrap(~SoilVeg)+
   geom_boxplot()+
-  scale_color_manual(values = c("black", "blue"))+
-  ylim(0,60)+
+  scale_fill_manual(values = c("#F29746", "#FFE793", "#4F93A7"))+
+  ylim(0,45)+
   xlab("")+
   ylab("Gamma diversity (1,000 m2 richness)")+
-  theme_bw()
+  theme_base()
+
+ggsave("C:/Users/ohler/Dropbox/grants/Gemini/figures/gammadiv.pdf",
+       plot = last_plot(),
+       device = "pdf",
+       path = NULL,
+       scale = 1,
+       width = 8,
+       height = 4,
+       units = c("in"),
+       dpi = 600,
+       limitsize = TRUE)
+
 
 mod <- lme(sr~Treatment*SoilVeg, random = ~1|Transect, data = master_gamma_results)
 summary(mod)
@@ -351,7 +375,7 @@ met_disturb_2024%>%
   geom_smooth(method = "lm")+
   ylab("Alpha diversity (log(c)")+
   xlab("Percent disturbance")+
-  theme_bw()
+  theme_base()
 
 
 met_disturb_2024%>%
@@ -361,7 +385,7 @@ met_disturb_2024%>%
   geom_smooth(method = "lm")+
   ylab("Slope (z)")+
   xlab("Percent disturbance")+
-  theme_bw()
+  theme_base()
 
 
 
@@ -375,7 +399,7 @@ gamma_disturb_2024%>%
   geom_smooth(method = "lm")+
   ylab("1,000 m2 richness")+
   xlab("Percent disturbance")+
-  theme_bw()
+  theme_base()
 
 
 mod <- lme(sr~perc_disturbance_2024*SoilVeg.y, random = ~1|Transect, data = gamma_disturb_2024)

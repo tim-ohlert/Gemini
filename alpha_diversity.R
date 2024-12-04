@@ -7,6 +7,7 @@ library(emmeans)
 library(vegan)
 library(codyn)
 library(indicspecies)
+library(ggthemes)
 
 
 
@@ -39,7 +40,7 @@ ggplot( aes(Treatment, Shannon, color = Treatment))+
   scale_color_manual(values = c("black", "blue"))+
   geom_boxplot()+
   xlab("")+
-  theme_bw()
+  theme_base()
 
 mod <- lme(Shannon~Treatment*SoilVeg, random = ~1|Transect, data = subset(shannon, Year == 2024))
 summary(mod)
@@ -59,12 +60,26 @@ even$Treatment <- revalue(even$Treatment, c("Drive and Crush" = "Impact", "Refer
 
 even%>%
   subset(Year == 2024)%>%
-ggplot( aes(Treatment, Evar, color = Treatment))+
+ggplot( aes(Treatment, Evar, fill = SoilVeg))+
   facet_wrap(~SoilVeg)+
-  scale_color_manual(values = c("black", "blue"))+
+  scale_fill_manual(values = c("#F29746", "#FFE793", "#4F93A7"))+
   geom_boxplot()+
+  ylab("Evenness")+
+  ylim(0,1)+
   xlab("")+
-  theme_bw()
+  theme_base()
+
+ggsave("C:/Users/ohler/Dropbox/grants/Gemini/figures/evenness.pdf",
+       plot = last_plot(),
+       device = "pdf",
+       path = NULL,
+       scale = 1,
+       width = 8,
+       height = 4,
+       units = c("in"),
+       dpi = 600,
+       limitsize = TRUE)
+
 
 mod <- lme(Evar~Treatment*SoilVeg, random = ~1|Transect, data = subset(even, Year == 2024 & Evar != "NA"))
 summary(mod)
@@ -74,14 +89,25 @@ pairs(emmeans(mod, ~ Treatment*SoilVeg))
 
 even%>%
   subset(Year == 2024)%>%
-  ggplot( aes(Treatment, richness, color = Treatment))+
+  ggplot( aes(Treatment, richness, fill = SoilVeg))+
   facet_wrap(~SoilVeg)+
-  scale_color_manual(values = c("black", "blue"))+
+  scale_fill_manual(values = c("#F29746", "#FFE793", "#4F93A7"))+
   geom_boxplot()+
+  ylab("Richness")+
   xlab("")+
   ylim(0,20)+
-  theme_bw()
+  theme_base()
 
+ggsave("C:/Users/ohler/Dropbox/grants/Gemini/figures/richness.pdf",
+  plot = last_plot(),
+  device = "pdf",
+  path = NULL,
+  scale = 1,
+  width = 8,
+  height = 4,
+  units = c("in"),
+  dpi = 600,
+  limitsize = TRUE)
 
 mod <- lme(richness~Treatment*SoilVeg, random = ~1|Transect, data = subset(even, Year == 2024 & Evar != "NA"))
 summary(mod)
@@ -98,7 +124,7 @@ ggplot(aes(summ_perc_dist, richness, color = SoilVeg))+
   geom_smooth(method = "lm")+
   ylab("Richness")+
   xlab("Percent disturbance")+
-  theme_bw()
+  theme_base()
 
 #disturbance->evenness
 subset(even, Year == 2024 & Treatment == "Impact")%>%
@@ -108,7 +134,7 @@ subset(even, Year == 2024 & Treatment == "Impact")%>%
   geom_smooth(method = "lm")+
   ylab("Eveness")+
   xlab("Percent disturbance")+
-  theme_bw()
+  theme_base()
 
 #disturbance->shannon
 subset(shannon, Year == 2024 & Treatment == "Impact")%>%
@@ -118,7 +144,7 @@ subset(shannon, Year == 2024 & Treatment == "Impact")%>%
   geom_smooth(method = "lm")+
   ylab("Shannon's diversity")+
   xlab("Percent disturbance")+
-  theme_bw()
+  theme_base()
 
 
 
@@ -130,6 +156,8 @@ wide <- modwhit.one%>%
   left_join(transect.info, by = "Transect")%>%
   dplyr::select(Year, Transect, Quad_num, Treatment, SoilVeg, Spp_code, Cover_perc)%>%
   pivot_wider( names_from = "Spp_code", values_from = "Cover_perc", values_fill = 0)
+
+
 
 
 #DEEPCREOSOTE
