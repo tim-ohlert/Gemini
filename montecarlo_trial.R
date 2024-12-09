@@ -8,7 +8,7 @@ library(codyn)
 library(tidyverse)
 library(MASS) 
 library(boot)
-library(ggtheme)
+library(ggthemes)
 
 modwhit <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/modwhit_clean_2024.csv")
 Mod.whit.spp <- read.csv("C:/Users/ohler/Dropbox/grants/Gemini/Mod-whit-spp.csv")
@@ -230,6 +230,7 @@ four_thousand_m <- modwhit%>%
   subset(Spp_code != "none") %>%
   subset(Year == 2024)%>%
   dplyr::select(Transect, Spp_code, SoilVeg, Treatment)%>%
+  unique()%>% #just added
   dplyr::select( Spp_code, SoilVeg, Treatment)%>%
   unite(SoilVegTrt.col,c("SoilVeg","Treatment"))
  # unique()
@@ -269,14 +270,28 @@ master_gamma_results <- master_gamma_results%>%
 
 master_gamma_results$Treatment <- revalue(master_gamma_results$Treatment, c("Drive and Crush" = "Impact", "Reference" = "Control" ))
 
-ggplot(master_gamma_results, aes(Treatment, sr, color = Treatment))+
+
+
+ggplot(master_gamma_results, aes(Treatment, sr, fill = SoilVeg))+
   facet_wrap(~SoilVeg)+
   geom_boxplot()+
-  scale_color_manual(values = c("black", "blue"))+
+  scale_fill_manual(values = c("#F29746", "#FFE793", "#4F93A7"))+
   ylim(0,60)+
   xlab("")+
   ylab("Gamma diversity (4,000 m2 richness)")+
   theme_base()
+
+ggsave("C:/Users/ohler/Dropbox/grants/Gemini/figures/gammadiv_4000.pdf",
+       plot = last_plot(),
+       device = "pdf",
+       path = NULL,
+       scale = 1,
+       width = 8,
+       height = 4,
+       units = c("in"),
+       dpi = 600,
+       limitsize = TRUE)
+
 
 mod <- lm(sr~Treatment*SoilVeg, data = master_gamma_results)
 summary(mod)
