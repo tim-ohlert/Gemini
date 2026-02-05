@@ -191,10 +191,10 @@ ggplot(mc, aes(slope))+
   xlim(-0.35,0.75)+
   theme_base()
 
-ggplot(mc, aes(Treatment, slope, fill = SoilVeg))+
+ggplot(mc, aes(Treatment, slope, fill = Treatment))+
   facet_wrap(~SoilVeg)+
   geom_boxplot()+
-  scale_fill_manual(values = c("#F29746", "#FFE793", "#4F93A7"))+
+  scale_fill_manual(values = c( "#FFE793", "#4F93A7"))+
   xlab("")+
   ylab("Beta diversity (z)")+
   theme_base()
@@ -272,10 +272,10 @@ master_gamma_results$Treatment <- revalue(master_gamma_results$Treatment, c("Dri
 
 
 
-ggplot(master_gamma_results, aes(Treatment, sr, fill = SoilVeg))+
+ggplot(master_gamma_results, aes(Treatment, sr, fill = Treatment))+
   facet_wrap(~SoilVeg)+
   geom_boxplot()+
-  scale_fill_manual(values = c("#F29746", "#FFE793", "#4F93A7"))+
+  scale_fill_manual(values = c( "#FFE793", "#4F93A7"))+
   ylim(0,60)+
   xlab("")+
   ylab("Gamma diversity (4,000 m2 richness)")+
@@ -345,10 +345,10 @@ master_gamma_results <- master_gamma_results%>%
 
 master_gamma_results$Treatment <- revalue(master_gamma_results$Treatment, c("Drive and Crush" = "Impact", "Reference" = "Control" ))
 
-ggplot(master_gamma_results, aes(Treatment, sr, fill = SoilVeg))+
+ggplot(master_gamma_results, aes(Treatment, sr, fill = Treatment))+
   facet_wrap(~SoilVeg)+
   geom_boxplot()+
-  scale_fill_manual(values = c("#F29746", "#FFE793", "#4F93A7"))+
+  scale_fill_manual(values = c( "#FFE793", "#4F93A7"))+
   ylim(0,45)+
   xlab("")+
   ylab("Gamma diversity (1,000 m2 richness)")+
@@ -419,8 +419,8 @@ gamma_disturb_2024%>%
 
 mod <- lme(sr~perc_disturbance_2024*SoilVeg.y, random = ~1|Transect, data = gamma_disturb_2024)
 summary(mod)
-emtrends(mod, ~ perc_disturbance_2024*SoilVeg.y)
-pairs(emmeans(mod, ~ perc_disturbance_2024*SoilVeg.y))
+#emtrends(mod, ~ perc_disturbance_2024*SoilVeg.y)
+#pairs(emmeans(mod, ~ perc_disturbance_2024*SoilVeg.y))
 emtrends(mod, ~ perc_disturbance_2024| SoilVeg.y, var = "perc_disturbance_2024")
 emmeans(emtrends(mod, ~  SoilVeg.y, var = "perc_disturbance_2024"), "SoilVeg.y")
 

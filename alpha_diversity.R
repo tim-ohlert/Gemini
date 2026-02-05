@@ -60,9 +60,9 @@ even$Treatment <- revalue(even$Treatment, c("Drive and Crush" = "Impact", "Refer
 
 even%>%
   subset(Year == 2024)%>%
-ggplot( aes(Treatment, Evar, fill = SoilVeg))+
+ggplot( aes(Treatment, Evar, fill = Treatment))+
   facet_wrap(~SoilVeg)+
-  scale_fill_manual(values = c("#F29746", "#FFE793", "#4F93A7"))+
+  scale_fill_manual(values = c( "#FFE793", "#4F93A7"))+
   geom_boxplot()+
   ylab("Evenness")+
   ylim(0,1)+
@@ -89,9 +89,9 @@ pairs(emmeans(mod, ~ Treatment*SoilVeg))
 
 even%>%
   subset(Year == 2024)%>%
-  ggplot( aes(Treatment, richness, fill = SoilVeg))+
+  ggplot( aes(Treatment, richness, fill = Treatment))+
   facet_wrap(~SoilVeg)+
-  scale_fill_manual(values = c("#F29746", "#FFE793", "#4F93A7"))+
+  scale_fill_manual(values = c( "#FFE793", "#4F93A7"))+
   geom_boxplot()+
   ylab("Richness")+
   xlab("")+
