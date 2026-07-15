@@ -180,7 +180,7 @@ ggsave("C:/Users/ohler/Dropbox/grants/Gemini/figures/evenness_change.pdf",
        limitsize = TRUE)
 
 mod <- lme(Evar_change~Treatment*SoilVeg, random = ~1|Transect, 
-           data = even_change)
+           data = na.omit(even_change))
 summary(mod)
 emmeans(mod, ~ Treatment*SoilVeg)
 pairs(emmeans(mod, ~ Treatment*SoilVeg))
